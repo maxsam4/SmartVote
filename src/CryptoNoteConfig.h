@@ -33,7 +33,7 @@ const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT            = 60 * 60 * 2;
 const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW             = 60;
 
 // MONEY_SUPPLY - total number coins to be generated
-const uint64_t MONEY_SUPPLY                                  = UINT64_C(-1);
+const uint64_t MONEY_SUPPLY                                  = UINT64_C(2147483647);
 const uint64_t TAIL_EMISSION_REWARD                          = UINT64_C(0);
 const size_t CRYPTONOTE_COIN_VERSION                         = 1;
 const unsigned EMISSION_SPEED_FACTOR                         = 1;
@@ -72,7 +72,7 @@ const size_t   FUSION_TX_MIN_INPUT_COUNT                     = 0;
 const size_t   FUSION_TX_MIN_IN_OUT_COUNT_RATIO              = 0;
 
 const uint32_t UPGRADE_HEIGHT_V2                             = 0;
-const uint32_t UPGRADE_HEIGHT_V3                             = 0;
+const uint32_t UPGRADE_HEIGHT_V3                             = 4294967294;
 const unsigned UPGRADE_VOTING_THRESHOLD = 90;               // percent
 const uint32_t   UPGRADE_VOTING_WINDOW                       = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;  // blocks
 const uint32_t   UPGRADE_WINDOW                              = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;  // blocks
