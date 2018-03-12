@@ -938,8 +938,8 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm)
     xdestination.address = m_candidate;
     xdestination.amount = 1;
     xdsts.push_back(xdestination);
-  
-    CryptoNote::TransactionId tx = m_wallet->sendTransaction(xdsts, 0, '', 0, 0);
+    std::vector<uint8_t> xextra;
+    CryptoNote::TransactionId tx = m_wallet->sendTransaction(xdsts, 0, xextra, 0, 0);
     if (tx == WALLET_LEGACY_INVALID_TRANSACTION_ID) {
       fail_msg_writer() << "Can't cast vote";
     }
