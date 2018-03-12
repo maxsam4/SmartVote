@@ -939,6 +939,8 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm)
     xdestination.amount = 1;
     xdsts.push_back(xdestination);
     std::vector<uint8_t> xextra;
+    if (!createTxExtraWithPaymentId("DkNPqYDiRejIapwb1lTf4duTIzDOTqSMqn9WiJLlu1aZxie3R8pwurObF2T8JhXw", extra))
+      logger(ERROR, BRIGHT_RED) << "payment ID has invalid format: \"" << value << "\", expected 64-character string";
     uint64_t xfee = UINT64_C(0);
     size_t xfake_outs_count = 0;
     std::string xextras;
