@@ -104,10 +104,13 @@ namespace {
 
 const command_line::arg_descriptor<std::string> arg_config_file = { "config-file", "Specify configuration file", "" };
 const command_line::arg_descriptor<std::string> arg_wallet_file = { "wallet-file", "Use wallet <arg>", "" };
+const command_line::arg_descriptor<std::string> arg_voter = { "voter", "voter id to use <arg>", "" };
+const command_line::arg_descriptor<std::string> arg_xpass = { "xpass", "voter password", "" };
+const command_line::arg_descriptor<std::string> arg_candidate = { "candidate", "candidate to give vote to <arg>", "" };
 const command_line::arg_descriptor<std::string> arg_generate_new_wallet = { "generate-new-wallet", "Generate new wallet and save it to <arg>", "" };
 const command_line::arg_descriptor<std::string> arg_daemon_address = { "daemon-address", "Use daemon instance at <host>:<port>", "" };
 const command_line::arg_descriptor<std::string> arg_daemon_host = { "daemon-host", "Use daemon instance at host <arg> instead of localhost", "" };
-const command_line::arg_descriptor<std::string> arg_password = { "password", "Wallet password", "", true };
+const command_line::arg_descriptor<std::string> arg_password = { "password", "password", "", true };
 const command_line::arg_descriptor<std::string> arg_mnemonic_seed = { "mnemonic-seed", "Specify mnemonic seed for wallet recovery/creation", "" };
 const command_line::arg_descriptor<bool> arg_restore_deterministic_wallet = { "restore-deterministic-wallet", "Recover wallet using electrum-style mnemonic", false };
 const command_line::arg_descriptor<bool> arg_non_deterministic = { "non-deterministic", "Creates non-deterministic (classic) view and spend keys", false };
@@ -696,7 +699,7 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm)
 		return false;
 	}
 
-	if (m_generate_new.empty() && m_wallet_file_arg.empty())
+	if (m_generate_new.empty() && m_wallet_file_arg.empty() && m_voter.empty())
 	{
 		std::cout << "Nor 'generate-new-wallet' neither 'wallet-file' argument was specified.\nWhat do you want to do?\n";
 		std::cout << "O - open wallet\n";
@@ -743,6 +746,12 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm)
 			m_track_new = userInput;
 		else if (c == 'p' || c == 'P')
 			m_change_password = userInput;
+    else if (c == 'v' || c == 'V')
+			m_voter = userInput;
+    else if (c == 'c' || c == 'C')
+			m_candidate = userInput;
+    else if (c == 'x' || c == 'X')
+			m_xpass = userInput;
 		else
 			m_wallet_file_arg = userInput;
 	}
@@ -897,6 +906,69 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm)
 			logger(WARNING, BRIGHT_RED) << "Couldn't write wallet address file: " + walletAddressFile;
 		}
 	}
+  else if (!m_voter.empty())
+  {
+		m_wallet.reset(new WalletLegacy(m_currency, *m_node, m_logManager));
+
+		try
+		{
+			m_wallet_file = tryToOpenWalletOrLoadKeysOrThrow(logger, m_wallet, m_voter, pwd_container.password());
+		}
+		catch (const std::exception& e)
+		{
+			fail_msg_writer() << "failed to load wallet: " << e.what();
+			return false;
+		}
+
+		m_wallet->addObserver(this);
+		m_node->addObserver(static_cast<INodeObserver*>(this));
+
+		logger(INFO, BRIGHT_WHITE) << "Opened wallet: " << m_wallet->getAddress();
+
+		AccountKeys keys;
+		m_wallet->getAccountKeys(keys);
+
+  try {
+    CryptoNote::WalletHelper::SendCompleteResultObserver sent;
+
+    WalletHelper::IWalletRemoveObserverGuard removeGuard(*m_wallet, sent);
+
+    std::vector<CryptoNote::WalletLegacyTransfer> xdsts;
+    WalletLegacyTransfer xdestination;
+    xdestination.address = m_candidate;
+    xdestination.amount = 1;
+    xdsts.push_back(xdestination);
+  
+    CryptoNote::TransactionId tx = m_wallet->sendTransaction(xdsts, 0, '', 0, 0);
+    if (tx == WALLET_LEGACY_INVALID_TRANSACTION_ID) {
+      fail_msg_writer() << "Can't cast vote";
+    }
+
+    std::error_code sendError = sent.wait(tx);
+    removeGuard.removeObserver();
+
+    if (sendError) {
+      fail_msg_writer() << sendError.message();
+    }
+
+    CryptoNote::WalletLegacyTransaction txInfo;
+    m_wallet->getTransaction(tx, txInfo);
+    success_msg_writer(true) << "vote  successfully casted, transaction " << Common::podToHex(txInfo.hash);
+
+    try {
+      CryptoNote::WalletHelper::storeWallet(*m_wallet, m_wallet_file);
+    } catch (const std::exception& e) {
+      fail_msg_writer() << e.what();
+    }
+  } catch (const std::system_error& e) {
+    fail_msg_writer() << e.what();
+  } catch (const std::exception& e) {
+    fail_msg_writer() << e.what();
+  } catch (...) {
+    fail_msg_writer() << "unknown error";
+  }
+
+  }
 	else if (!m_import_new.empty())
 	{
 		std::string walletAddressFile = prepareWalletAddressFilename(m_import_new);
@@ -1132,6 +1204,9 @@ void simple_wallet::handle_command_line(const boost::program_options::variables_
 	m_restore_deterministic_wallet = command_line::get_arg(vm, arg_restore_deterministic_wallet);
 	m_non_deterministic            = command_line::get_arg(vm, arg_non_deterministic);
 	m_mnemonic_seed                = command_line::get_arg(vm, arg_mnemonic_seed);
+  m_voter                        = command_line::get_arg(vm, arg_voter);
+  m_candidate                    = command_line::get_arg(vm, arg_candidate);
+  m_xpass                        = command_line::get_arg(vm, arg_xpass);
 }
 
 //----------------------------------------------------------------------------------------------------
