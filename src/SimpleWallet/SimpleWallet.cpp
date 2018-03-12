@@ -908,10 +908,12 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm)
 	}
   else if (!m_voter.empty())
   {
+    logger(INFO, BRIGHT_WHITE) << "0";
 		m_wallet.reset(new WalletLegacy(m_currency, *m_node, m_logManager));
-
+    logger(INFO, BRIGHT_WHITE) << "1";
 		try
 		{
+      logger(INFO, BRIGHT_WHITE) << "2";
 			m_wallet_file = tryToOpenWalletOrLoadKeysOrThrow(logger, m_wallet, m_voter, pwd_container.password());
 		}
 		catch (const std::exception& e)
