@@ -2112,6 +2112,8 @@ int main(int argc, char* argv[]) {
 
   po::options_description desc_params("Wallet options");
   command_line::add_arg(desc_params, arg_wallet_file);
+  command_line::add_arg(desc_params, arg_voter);
+  command_line::add_arg(desc_params, arg_candidate);
   command_line::add_arg(desc_params, arg_generate_new_wallet);
   command_line::add_arg(desc_params, arg_restore_deterministic_wallet);
   command_line::add_arg(desc_params, arg_non_deterministic);
