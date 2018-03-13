@@ -181,7 +181,7 @@ namespace CryptoNote
     private:
       CryptoNote::simple_wallet& m_simple_wallet;
       uint64_t m_blockchain_height;
-      std::chrono:\em_clock::time_point m_blockchain_height_update_time;
+      std::chrono::system_clock::time_point m_blockchain_height_update_time;
       std::chrono::system_clock::time_point m_print_time;
     };
 
