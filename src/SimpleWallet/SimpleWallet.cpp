@@ -906,7 +906,7 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm)
 			logger(WARNING, BRIGHT_RED) << "Couldn't write wallet address file: " + walletAddressFile;
 		}
 	}
-  else if (!m_voter.empty())
+  /*else if (!m_voter.empty())
   {
     logger(INFO, BRIGHT_WHITE) << "0";
 		m_wallet.reset(new WalletLegacy(m_currency, *m_node, m_logManager));
@@ -975,7 +975,7 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm)
   } catch (...) {
     fail_msg_writer() << "unknown error";
   }
-
+*/
   }
 	else if (!m_import_new.empty())
 	{
