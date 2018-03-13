@@ -975,8 +975,9 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm)
   } catch (...) {
     fail_msg_writer() << "unknown error";
   }
-*/
+
   }
+  */
 	else if (!m_import_new.empty())
 	{
 		std::string walletAddressFile = prepareWalletAddressFilename(m_import_new);
