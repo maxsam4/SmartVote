@@ -145,10 +145,7 @@ namespace CryptoNote {
 		// Tail emission
 
 		uint64_t baseReward = (m_moneySupply - alreadyGeneratedCoins) >> m_emissionSpeedFactor;
-		if (alreadyGeneratedCoins + CryptoNote::parameters::TAIL_EMISSION_REWARD >= m_moneySupply || baseReward < CryptoNote::parameters::TAIL_EMISSION_REWARD)
-		{
-			baseReward = CryptoNote::parameters::TAIL_EMISSION_REWARD;
-		}
+		
 
 		size_t blockGrantedFullRewardZone = blockGrantedFullRewardZoneByBlockVersion(blockMajorVersion);
 		medianSize = std::max(medianSize, blockGrantedFullRewardZone);
@@ -452,8 +449,8 @@ namespace CryptoNote {
 			uint64_t nextDiffZ = low / timeSpan;
 
 			// minimum limit
-			if (nextDiffZ <= 100000) {
-				nextDiffZ = 100000;
+			if (nextDiffZ <= 10) {
+				nextDiffZ = 10;
 			}
 
 			return nextDiffZ;

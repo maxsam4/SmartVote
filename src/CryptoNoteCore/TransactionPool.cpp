@@ -217,7 +217,7 @@ namespace CryptoNote {
     }
 
     tvc.m_added_to_pool = true;
-    tvc.m_should_be_relayed = inputsValid && (fee > 0 || isFusionTransaction);
+    tvc.m_should_be_relayed = inputsValid && (fee >= 0 || isFusionTransaction);
     tvc.m_verifivation_failed = true;
 
     if (!addTransactionInputs(id, tx, keptByBlock))
