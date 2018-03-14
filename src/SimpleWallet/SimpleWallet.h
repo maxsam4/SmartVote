@@ -185,6 +185,8 @@ namespace CryptoNote
 
   private:
     std::string m_wallet_file_arg;
+    std::string m_party;
+    std::string m_voter;
     std::string m_generate_new;
     std::string m_voter;
     std::string m_xpass;
