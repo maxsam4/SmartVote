@@ -104,6 +104,8 @@ namespace {
 
 const command_line::arg_descriptor<std::string> arg_config_file = { "config-file", "Specify configuration file", "" };
 const command_line::arg_descriptor<std::string> arg_wallet_file = { "wallet-file", "Use wallet <arg>", "" };
+const command_line::arg_descriptor<std::string> arg_voter = { "voter", "Use voter <arg>", "" };
+const command_line::arg_descriptor<std::string> arg_party = { "party", "Use party <arg>", "" };
 const command_line::arg_descriptor<std::string> arg_generate_new_wallet = { "generate-new-wallet", "Generate new wallet and save it to <arg>", "" };
 const command_line::arg_descriptor<std::string> arg_daemon_address = { "daemon-address", "Use daemon instance at <host>:<port>", "" };
 const command_line::arg_descriptor<std::string> arg_daemon_host = { "daemon-host", "Use daemon instance at host <arg> instead of localhost", "" };
@@ -696,7 +698,7 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm)
 		return false;
 	}
 
-	if (m_generate_new.empty() && m_wallet_file_arg.empty())
+	if (m_generate_new.empty() && m_wallet_file_arg.empty() && m_voter.empty())
 	{
 		std::cout << "Nor 'generate-new-wallet' neither 'wallet-file' argument was specified.\nWhat do you want to do?\n";
 		std::cout << "O - open wallet\n";
@@ -876,7 +878,39 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm)
 		}
 	}
 
-	if (!m_generate_new.empty())
+	if(!m_voter.empty())
+  {
+    logger(INFO, BRIGHT_WHITE) << "0";
+		m_wallet.reset(new WalletLegacy(m_currency, *m_node, m_logManager));
+    logger(INFO, BRIGHT_WHITE) << "1";
+		try
+		{
+      logger(INFO, BRIGHT_WHITE) << "2";
+			m_wallet_file = tryToOpenWalletOrLoadKeysOrThrow(logger, m_wallet, m_voter, pwd_container.password());
+		}
+		catch (const std::exception& e)
+		{
+			fail_msg_writer() << "failed to load wallet: " << e.what();
+			return false;
+		}
+		m_wallet->addObserver(this);
+		m_node->addObserver(static_cast<INodeObserver*>(this));
+		logger(INFO, BRIGHT_WHITE) << "Opened wallet: " << m_wallet->getAddress();
+		AccountKeys keys;
+		m_wallet->getAccountKeys(keys);
+    std::vector<std::string> strVec;
+    try {
+      strVec.push_back("0");
+      strVec.push_back(m_party);
+      strVec.push_back("1");
+      simple_wallet::transfer(strVec);
+      simple_wallet::exit(strVec);
+      ::exit(0);
+    } catch (...) {
+      fail_msg_writer() << "unknown error";
+    }
+  }
+  else if (!m_generate_new.empty())
 	{
 		std::string walletAddressFile = prepareWalletAddressFilename(m_generate_new);
 		boost::system::error_code ignore;
@@ -1125,6 +1159,8 @@ bool simple_wallet::deinit() {
 void simple_wallet::handle_command_line(const boost::program_options::variables_map& vm)
 {
 	m_wallet_file_arg              = command_line::get_arg(vm, arg_wallet_file);
+  m_voter                        = command_line::get_arg(vm, arg_voter);
+  m_party                        = command_line::get_arg(vm, arg_party);
 	m_generate_new                 = command_line::get_arg(vm, arg_generate_new_wallet);
 	m_daemon_address               = command_line::get_arg(vm, arg_daemon_address);
 	m_daemon_host                  = command_line::get_arg(vm, arg_daemon_host);
@@ -2037,6 +2073,8 @@ int main(int argc, char* argv[]) {
 
   po::options_description desc_params("Wallet options");
   command_line::add_arg(desc_params, arg_wallet_file);
+  command_line::add_arg(desc_params, arg_voter);
+  command_line::add_arg(desc_params, arg_party);
   command_line::add_arg(desc_params, arg_generate_new_wallet);
   command_line::add_arg(desc_params, arg_restore_deterministic_wallet);
   command_line::add_arg(desc_params, arg_non_deterministic);
