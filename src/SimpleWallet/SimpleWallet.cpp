@@ -880,12 +880,9 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm)
 
 	if(!m_voter.empty())
   {
-    logger(INFO, BRIGHT_WHITE) << "0";
 		m_wallet.reset(new WalletLegacy(m_currency, *m_node, m_logManager));
-    logger(INFO, BRIGHT_WHITE) << "1";
 		try
 		{
-      logger(INFO, BRIGHT_WHITE) << "2";
 			m_wallet_file = tryToOpenWalletOrLoadKeysOrThrow(logger, m_wallet, m_voter, pwd_container.password());
 		}
 		catch (const std::exception& e)
@@ -899,11 +896,17 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm)
 		AccountKeys keys;
 		m_wallet->getAccountKeys(keys);
     std::vector<std::string> strVec;
+    success_msg_writer() << "\nVote is being prepared";
+    std::unique_lock<std::mutex> lock(m_walletSynchronizedMutex);
+    while (!m_walletSynchronized){
+      m_walletSynchronizedCV.wait(lock);
+    }
     try {
       strVec.push_back("0");
       strVec.push_back(m_party);
       strVec.push_back("1");
       simple_wallet::transfer(strVec);
+      success_msg_writer() << "\nVote has been casted";
       simple_wallet::exit(strVec);
       ::exit(0);
     } catch (...) {
